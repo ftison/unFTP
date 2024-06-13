@@ -21,9 +21,10 @@ use crate::{
 use auth::LookupAuthenticator;
 use clap::ArgMatches;
 use domain::events::{EventDispatcher, FTPEvent, FTPEventPayload};
-use domain::user;
+use domain::user::{self, UserDetailProvider};
 use flate2::read::GzDecoder;
 use infra::usrdetail_json::JsonUserProvider;
+use infra::usrdetail_unique::UniqueUserProvider;
 use libunftp::{
     auth as auth_spi,
     notification::{DataListener, PresenceListener},
@@ -100,28 +101,62 @@ fn make_auth(
         Some("json") => make_json_auth(m),
         unknown_type => Err(format!("unknown auth type: {}", unknown_type.unwrap())),
     }?;
-    auth.set_usr_detail(
-        match (
-            m.value_of(args::USR_JSON_PATH),
-            m.value_of(args::USR_HTTP_URL),
-        ) {
-            (Some(path), None) => {
-                let json: String = load_user_file(path)
-                    .map_err(|e| format!("could not load user file '{}': {}", path, e))?;
-                Box::new(JsonUserProvider::from_json(json.as_str())?)
-            }
-            (None, Some(url)) => Box::new(HTTPUserDetailProvider::new(url)),
-            (None, None) => Box::new(DefaultUserProvider {}),
+
+    let chroot = m.value_of(args::CHROOT_ALL_USERS);
+    dbg!(chroot);
+    auth.set_usr_detail(if m.contains_id(args::CHROOT_ALL_USERS) {
+        match m.value_of(args::CHROOT_ALL_USERS) {
+            Some(value) => match value {
+                "yes" => Box::new(UniqueUserProvider {}),
+                "no" => match make_auth_detail_user(m) {
+                    Ok(provider) => provider,
+                    Err(e) => return Err(e),
+                },
+                _ => {
+                    return Err(format!(
+                        "please specify either 'yes' or 'no' for '{}'",
+                        args::CHROOT_ALL_USERS
+                    ))
+                }
+            },
             _ => {
                 return Err(format!(
-                    "please specify either '{}' or '{}' but not both",
-                    args::USR_JSON_PATH,
-                    args::USR_HTTP_URL
+                    "please specify either 'yes' or 'no' for '{}'",
+                    args::CHROOT_ALL_USERS
                 ))
             }
-        },
-    );
+        }
+    } else {
+        match make_auth_detail_user(m) {
+            Ok(provider) => provider,
+            Err(e) => return Err(e),
+        }
+    });
     Ok(Arc::new(auth))
+}
+
+fn make_auth_detail_user(
+    m: &clap::ArgMatches,
+) -> Result<Box<(dyn UserDetailProvider + Send + std::marker::Sync + 'static)>, String> {
+    match (
+        m.value_of(args::USR_JSON_PATH),
+        m.value_of(args::USR_HTTP_URL),
+    ) {
+        (Some(path), None) => {
+            let json: String = load_user_file(path)
+                .map_err(|e| format!("could not load user file '{}': {}", path, e))?;
+            Ok(Box::new(JsonUserProvider::from_json(json.as_str())?))
+        }
+        (None, Some(url)) => Ok(Box::new(HTTPUserDetailProvider::new(url))),
+        (None, None) => Ok(Box::new(DefaultUserProvider {})),
+        _ => {
+            return Err(format!(
+                "please specify either '{}' or '{}' but not both",
+                args::USR_JSON_PATH,
+                args::USR_HTTP_URL
+            ))
+        }
+    }
 }
 
 fn make_anon_auth() -> Result<LookupAuthenticator, String> {

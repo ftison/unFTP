@@ -44,6 +44,7 @@ pub const STORAGE_BACKEND_TYPE: &str = "sbe-type";
 pub const USR_JSON_PATH: &str = "usr-json-path";
 pub const USR_HTTP_URL: &str = "usr-http-url";
 pub const VERBOSITY: &str = "verbosity";
+pub const CHROOT_ALL_USERS: &str = "chroot-all-users";
 
 #[derive(ArgEnum, Clone, Debug)]
 #[allow(non_camel_case_types)]
@@ -535,5 +536,14 @@ pub(crate) fn clap_app(tmp_dir: &str) -> clap::Command {
                 .help("The ID of the GCP project where the Google Pub/Sub topic exists")
                 .env("UNFTP_NTF_PUBSUB_PROJECT")
                 .takes_value(true),
+        )
+        .arg(
+            Arg::new(CHROOT_ALL_USERS)
+                .long("chroot-all-users")
+                .value_name("YES|NO")
+                .help("'yes' to chroot all users, 'no' do nothing. Default is 'no'")
+                .env("UNFTP_CHROOT_ALL_USERS")
+                .takes_value(true)
+                .default_value("no"),
         )
 }
