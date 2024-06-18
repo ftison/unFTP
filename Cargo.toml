@@ -48,22 +48,27 @@ thiserror = "1.0.60"
 tokio = { version = "1.37.0", features = ["signal", "rt-multi-thread"] }
 unftp-sbe-fs = "0.2.5"
 unftp-sbe-gcs = { version = "0.2.6", optional = true }
-unftp-auth-rest = { version = "0.2.6", optional = true }
+#unftp-auth-rest = { path = "crates/unftp-auth-rest" , version = "0.2.6", optional = true }
 unftp-auth-jsonfile = { version = "0.3.4", optional = true }
 unftp-sbe-rooter = "0.2.1"
 unftp-sbe-restrict = "0.1.2"
 url = "2.5.0"
+percent-encoding = "2.3.1"
+regex = "1.10.4"
+tracing = { version = "0.1.40", default-features = false }
+tracing-attributes = "0.1.27"
+
 
 [target.'cfg(unix)'.dependencies]
 unftp-auth-pam = { version = "0.2.5", optional = true }
 
 [features]
-default = ["rest_auth", "cloud_storage", "jsonfile_auth"]
-all_extentions = ["pam_auth", "rest_auth", "jsonfile_auth", "cloud_storage"]
+default = ["cloud_storage", "jsonfile_auth"]
+all_extentions = ["pam_auth", "jsonfile_auth", "cloud_storage"]
 cloud_storage = ["unftp-sbe-gcs"]
 jsonfile_auth = ["unftp-auth-jsonfile"]
 pam_auth = ["unftp-auth-pam"]
-rest_auth = ["unftp-auth-rest"]
+# rest_auth = ["unftp-auth-rest"]
 tokio_console = ["console-subscriber", "tokio/tracing"]
 
 
@@ -71,7 +76,7 @@ tokio_console = ["console-subscriber", "tokio/tracing"]
 gnu = ["all_extentions"]
 
 # All features able to link statically
-musl = ["rest_auth", "cloud_storage", "jsonfile_auth"]
+musl = ["cloud_storage", "jsonfile_auth"]
 
 # Features used in our docker builds
 docker = ["musl"]

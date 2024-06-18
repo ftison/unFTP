@@ -13,6 +13,7 @@ mod logging;
 mod metrics;
 mod notify;
 mod storage;
+mod authentication;
 
 use crate::infra::userdetail_http::HTTPUserDetailProvider;
 use crate::{
@@ -53,6 +54,8 @@ use unftp_auth_pam as pam;
 use unftp_sbe_gcs::options::AuthMethod;
 use unftp_sbe_restrict::RestrictingVfs;
 use unftp_sbe_rooter::RooterVfs;
+
+use authentication::auth_rest as unftp_auth_rest;
 
 fn load_user_file(
     path: &str,
@@ -151,16 +154,6 @@ fn make_pam_auth(m: &clap::ArgMatches) -> Result<LookupAuthenticator, String> {
 }
 
 fn make_rest_auth(m: &clap::ArgMatches) -> Result<LookupAuthenticator, String> {
-    #[cfg(not(feature = "rest_auth"))]
-    {
-        let _ = m;
-        Err(format!(
-            "the rest authentication module was disabled at build time"
-        ))
-    }
-
-    #[cfg(feature = "rest_auth")]
-    {
         match (
             m.value_of(args::AUTH_REST_URL),
             m.value_of(args::AUTH_REST_REGEX),
@@ -206,7 +199,6 @@ fn make_rest_auth(m: &clap::ArgMatches) -> Result<LookupAuthenticator, String> {
             }
             _ => Err("for auth type rest please specify all auth-rest-* options".to_string()),
         }
-    }
 }
 
 fn make_json_auth(m: &clap::ArgMatches) -> Result<LookupAuthenticator, String> {

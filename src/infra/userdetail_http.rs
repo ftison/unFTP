@@ -1,4 +1,4 @@
-//! A libunftp [`UserDetail`](libunftp::auth::UserDetail) provider that obtains user detail
+//! A libunftp [`UserDetail`](libunftp::auth::user::UserDetail) provider that obtains user detail
 //! over HTTP.
 
 use crate::domain::user::{User, UserDetailError, UserDetailProvider};
@@ -8,7 +8,7 @@ use http::{Method, Request};
 use hyper::{Body, Client};
 use url::form_urlencoded;
 
-/// A libunftp [`UserDetail`](libunftp::auth::UserDetail) provider that obtains user detail
+/// A libunftp [`UserDetail`](libunftp::auth::user::UserDetail) provider that obtains user detail
 /// over HTTP.
 #[derive(Debug)]
 pub struct HTTPUserDetailProvider {
@@ -62,7 +62,9 @@ impl UserDetailProvider for HTTPUserDetailProvider {
             .map_err(|e| UserDetailError::with_source("body is not a valid UTF string", e))?;
 
         let json_usr_provider =
-            JsonUserProvider::from_json(json_str).map_err(UserDetailError::Generic)?;
+            JsonUserProvider::from_json(
+                format!("[{}]",json_str).as_str()
+            ).map_err(UserDetailError::Generic)?;
 
         json_usr_provider.provide_user_detail(username).await
     }
