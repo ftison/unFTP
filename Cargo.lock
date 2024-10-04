@@ -2726,8 +2726,10 @@ dependencies = [
  "hyper-rustls 0.23.2",
  "lazy_static",
  "libunftp",
+ "percent-encoding",
  "pretty_assertions",
  "prometheus",
+ "regex",
  "serde",
  "serde_json",
  "slog",
@@ -2736,9 +2738,10 @@ dependencies = [
  "slog-term",
  "thiserror",
  "tokio",
+ "tracing",
+ "tracing-attributes",
  "unftp-auth-jsonfile",
  "unftp-auth-pam",
- "unftp-auth-rest",
  "unftp-sbe-fs",
  "unftp-sbe-gcs",
  "unftp-sbe-restrict",
@@ -2777,25 +2780,6 @@ dependencies = [
  "async-trait",
  "libunftp",
  "pam",
- "tracing",
- "tracing-attributes",
-]
-
-[[package]]
-name = "unftp-auth-rest"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bdba42e5964ef945842167cab4c10fd12667dc12acbcfc702414f3d0262267ac"
-dependencies = [
- "async-trait",
- "hyper",
- "hyper-rustls 0.24.2",
- "libunftp",
- "percent-encoding",
- "regex",
- "serde",
- "serde_json",
- "tokio",
  "tracing",
  "tracing-attributes",
 ]
